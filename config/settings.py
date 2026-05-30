@@ -129,8 +129,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Unified Document Viewer — external integrations config (ADR-005, ADR-006)
-# Mọi giá trị lấy từ env → KHÔNG hardcode, KHÔNG lộ ra client. Có default cho dev.
+# Unified Document Viewer — external integrations
+# All values come from the environment (no hard-coded URLs/secrets) with dev defaults.
 # ─────────────────────────────────────────────────────────────────────────────
 DOCUMENT_SOURCES = {
     'SALES': {
@@ -141,12 +141,12 @@ DOCUMENT_SOURCES = {
     },
 }
 
-# Timeout mỗi external call (giây) — configurable, mặc định 5s (ADR-006).
-# "Slow ngang với dead" → hết giờ coi như unavailable → graceful degradation.
+# Per-call timeout (seconds), configurable. A slow source is treated like a dead one:
+# on timeout the source is marked unavailable and the request degrades gracefully.
 EXTERNAL_API_TIMEOUT = float(os.environ.get('EXTERNAL_API_TIMEOUT', '5'))
 
 
-# Observability — structured logging (đề đòi observability strategy)
+# Observability — structured logging
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
