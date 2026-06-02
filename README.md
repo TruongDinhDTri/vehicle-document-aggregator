@@ -32,7 +32,7 @@ client → :8000 (this app) → :9001 (Sales mock)
 ## Setup (once)
 ```bash
 git clone <repo-url>
-cd keyloop-document-viewer
+cd vehicle-document-aggregator
 
 python3 -m venv venv
 source venv/bin/activate            # Windows: venv\Scripts\activate
