@@ -49,13 +49,14 @@ and Service systems are mocked by a small local server (`mocks/mock_servers.py`)
 ```
 
 ### Component roles
-| Component | Responsibility |
-|-----------|----------------|
-| **Controller** (`documents/views.py`) | HTTP only: validate the VIN, call the aggregator, map the result to 200/502, write the audit log. |
-| **Aggregator** (`documents/aggregator.py`) | Business logic: fan out to both sources concurrently, merge the results, tag each document with its source, decide overall outcome. |
+
+| Component                                                | Responsibility                                                                                                                                            |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Controller** (`documents/views.py`)            | HTTP only: validate the VIN, call the aggregator, map the result to 200/502, write the audit log.                                                         |
+| **Aggregator** (`documents/aggregator.py`)       | Business logic: fan out to both sources concurrently, merge the results, tag each document with its source, decide overall outcome.                       |
 | **Adapters** (`fetch_sales` / `fetch_service`) | Anti-Corruption Layer: call one external system and translate its response into the shared `Document` model; swallow failures into a per-source status. |
-| **External APIs** (mocked) | Stand-ins for the real Sales and Service systems; each speaks its own field language. |
-| **SearchAuditLog** (SQLite) | Records each lookup and per-source outcome for observability. |
+| **External APIs** (mocked)                         | Stand-ins for the real Sales and Service systems; each speaks its own field language.                                                                     |
+| **SearchAuditLog** (SQLite)                        | Records each lookup and per-source outcome for observability.                                                                                             |
 
 ---
 
@@ -77,12 +78,14 @@ A request to `GET /api/vehicles/<vin>/documents`:
 source, not the sum of both.
 
 ### API contract
+
 ```
 GET /api/vehicles/<vin>/documents
   200 → at least one source responded (degradation reported in `sources`)
   502 → all upstream sources failed
   400 → VIN is not 17 characters
 ```
+
 ```jsonc
 {
   "vin": "WDB4631234567890X",
@@ -100,13 +103,13 @@ GET /api/vehicles/<vin>/documents
 
 ## 4. Tech Stack & Justifications
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Language / framework | Python + Django REST Framework | Familiarity (ship within the time budget); batteries included: routing, serialization, test client. |
-| Concurrency | `concurrent.futures.ThreadPoolExecutor` | The work is **I/O-bound** with only **two** calls. Threads give true concurrency for blocking HTTP without the complexity of an async stack. Async would matter at hundreds/thousands of concurrent calls (see §7). |
-| HTTP client | `requests` | Simple, synchronous, pairs naturally with threads. |
-| Database | SQLite (Django ORM) | The app doesn't own the documents; it only persists a lightweight audit log. SQLite is enough for V1 and trivially swappable for Postgres in production. |
-| Tests | Django test runner (`unittest` + `unittest.mock`) | Core logic is tested without the network by mocking the adapters / `requests`. |
+| Layer                | Choice                                                | Why                                                                                                                                                                                                                             |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language / framework | Python + Django REST Framework                        | Familiarity (ship within the time budget); batteries included: routing, serialization, test client.                                                                                                                             |
+| Concurrency          | `concurrent.futures.ThreadPoolExecutor`             | The work is**I/O-bound** with only **two** calls. Threads give true concurrency for blocking HTTP without the complexity of an async stack. Async would matter at hundreds/thousands of concurrent calls (see §7). |
+| HTTP client          | `requests`                                          | Simple, synchronous, pairs naturally with threads.                                                                                                                                                                              |
+| Database             | SQLite (Django ORM)                                   | The app doesn't own the documents; it only persists a lightweight audit log. SQLite is enough for V1 and trivially swappable for Postgres in production.                                                                        |
+| Tests                | Django test runner (`unittest` + `unittest.mock`) | Core logic is tested without the network by mocking the adapters /`requests`.                                                                                                                                                 |
 
 ---
 
